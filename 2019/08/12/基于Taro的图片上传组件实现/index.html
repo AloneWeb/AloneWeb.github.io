@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"nearzeno.github.io","root":"/","scheme":"Mist","version":"8.0.2","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="前言因为最近在项目中经常遇到图片上传的场景，而Taro也是最近才崛起的小程序框架，在生态方面还是偏薄弱，没找到相关的轮子，索性自己写一个简单的上传组件，以后业务复杂了再在此基础上进行扩展。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Taro的图片上传组件实现">
+<meta property="og:url" content="https://nearzeno.github.io/2019/08/12/%E5%9F%BA%E4%BA%8ETaro%E7%9A%84%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E7%BB%84%E4%BB%B6%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="NearZeno&#39;s Blog">
+<meta property="og:description" content="前言因为最近在项目中经常遇到图片上传的场景，而Taro也是最近才崛起的小程序框架，在生态方面还是偏薄弱，没找到相关的轮子，索性自己写一个简单的上传组件，以后业务复杂了再在此基础上进行扩展。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-08-12T12:11:39.000Z">
+<meta property="article:modified_time" content="2020-11-02T16:04:50.901Z">
+<meta property="article:author" content="NearZeno">
+<meta property="article:tag" content="移动端">
+<meta property="article:tag" content="微信小程序">
+<meta property="article:tag" content="图片上传">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://nearzeno.github.io/2019/08/12/%E5%9F%BA%E4%BA%8ETaro%E7%9A%84%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E7%BB%84%E4%BB%B6%E5%AE%9E%E7%8E%B0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>基于Taro的图片上传组件实现 | NearZeno's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?776aa85ce09d20bb70a776e834e62fe6";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">NearZeno's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">一切都在无可挽回地走向庸俗。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6JS%E4%BB%A3%E7%A0%81"><span class="nav-number">3.1.</span> <span class="nav-text">组件JS代码</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6JSX%E7%BB%93%E6%9E%84"><span class="nav-number">3.2.</span> <span class="nav-text">组件JSX结构</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%A0%B7%E5%BC%8F"><span class="nav-number">3.3.</span> <span class="nav-text">组件基础样式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E5%86%85%E4%BD%BF%E7%94%A8%E7%BB%84%E4%BB%B6"><span class="nav-number">3.4.</span> <span class="nav-text">页面内使用组件</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="NearZeno"
+      src="/images/MyAvatar.jpg">
+  <p class="site-author-name" itemprop="name">NearZeno</p>
+  <div class="site-description" itemprop="description">博客系统、前端、开发、程序员、JavaScript、编程、微信小程序</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/nearzeno" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;nearzeno" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:nearzeno@gmail.com" title="E-Mail → mailto:nearzeno@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;" rel="noopener" target="_blank">知乎</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://juejin.im/" title="https:&#x2F;&#x2F;juejin.im&#x2F;" rel="noopener" target="_blank">掘金</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.google.com/" title="https:&#x2F;&#x2F;www.google.com&#x2F;" rel="noopener" target="_blank">Google</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/" title="https:&#x2F;&#x2F;github.com&#x2F;" rel="noopener" target="_blank">GitHub</a>
+        </li>
+    </ul>
+  </div>
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://nearzeno.github.io/2019/08/12/%E5%9F%BA%E4%BA%8ETaro%E7%9A%84%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E7%BB%84%E4%BB%B6%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/MyAvatar.jpg">
+      <meta itemprop="name" content="NearZeno">
+      <meta itemprop="description" content="博客系统、前端、开发、程序员、JavaScript、编程、微信小程序">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="NearZeno's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于Taro的图片上传组件实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-08-12 20:11:39" itemprop="dateCreated datePublished" datetime="2019-08-12T20:11:39+08:00">2019-08-12</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-11-03 00:04:50" itemprop="dateModified" datetime="2020-11-03T00:04:50+08:00">2020-11-03</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%89%8D%E7%AB%AF/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F/" itemprop="url" rel="index"><span itemprop="name">微信小程序</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>因为最近在项目中经常遇到图片上传的场景，而Taro也是最近才崛起的小程序框架，在生态方面还是偏薄弱，没找到相关的轮子，索性自己写一个简单的上传组件，以后业务复杂了再在此基础上进行扩展。</p>
+<a id="more"></a>
+<p>本例只做一个简单的基于Taro的图片上传组件的实现，使用Taro来做跨端处理，这里微信小程序以小程序为主，其他端没有试过，有兴趣的同学可以自己尝试。</p>
+<h4 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h4><p>在Taro的基础上实现上传功能，这里主要是调用两个基础API</p>
+<ol>
+<li>选择图片的API: <a target="_blank" rel="noopener" href="https://taro-docs.jd.com/taro/docs/apis/multimedia/images/chooseImage.html">Taro.chooseImage</a></li>
+<li>上传文件的API: <a target="_blank" rel="noopener" href="https://taro-docs.jd.com/taro/docs/apis/network/fileTransfer/uploadFile.html">Taro.uploadFile</a></li>
+</ol>
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p><em>注1:</em> 请务必保证自己的Taro已安装，详情教程请见: <a target="_blank" rel="noopener" href="https://taro-docs.jd.com/taro/docs/GETTING-STARTED.html">Taro官放文档</a><br><em>注2:</em> 因为我们以实现上传七牛云为例, 所以代码里面上传地址为七牛的地址, 并且有获取token的操作, 如果需要上传到自己的服务器可修改<code>uploadUrl</code>(上传地址), 如果后台需要类似的token鉴权, 可在uploadFile API参数<code>formData</code>上加入鉴权参数<br><em>注3:</em> 为了布局方便样式使用了TaroUI的flex布局系统，需要事先安装<a target="_blank" rel="noopener" href="https://taro-ui.aotu.io/#/docs/quickstart">TaroUI</a>   (也可不使用TaroUI自己写样式)<br><em>注4:</em> 这里不使用TaroUI的ImagePicker是因为考虑以后的扩展、自定义样式，如果喜欢可以自行结合ImagePicker使用</p>
+<h5 id="组件JS代码"><a href="#组件JS代码" class="headerlink" title="组件JS代码"></a>组件JS代码</h5><p>组件引入</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* src/components/ImageUpload/index.jsx */</span></span><br><span class="line"><span class="comment">// import &amp; constant</span></span><br><span class="line"><span class="keyword">import</span> Taro, &#123; Component &#125; <span class="keyword">from</span> <span class="string">&#x27;@tarojs/taro&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; View, Image &#125; <span class="keyword">from</span> <span class="string">&#x27;@tarojs/components&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;./index.scss&#x27;</span></span><br><span class="line"><span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+<p>组件默认属性，初始化函数</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> defaultProps = &#123;</span><br><span class="line">  imageFiles: [], <span class="comment">// 图片列表</span></span><br><span class="line">  maxLength: <span class="number">4</span>, <span class="comment">// 最大可上传图片数</span></span><br><span class="line">  <span class="function"><span class="title">onChange</span>(<span class="params"></span>)</span> &#123;&#125;, <span class="comment">// 图片改变事件回调</span></span><br><span class="line">  onImageClick () &#123;&#125;, <span class="comment">// 图片点击事件回调</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title">constructor</span> (<span class="params">props</span>) &#123;</span><br><span class="line">  <span class="built_in">super</span>(props)</span><br><span class="line">  <span class="built_in">this</span>.picUrls = []</span><br><span class="line">  <span class="built_in">this</span>.state = &#123;</span><br><span class="line">    uploadUrl: <span class="string">&#x27;https://up-z2.qiniup.com&#x27;</span>, <span class="comment">// 七牛的上传域名</span></span><br><span class="line">    token: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">    uploadCurrent: <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>请求后台获取七牛token(<em>注:</em> 后台如何从七牛获取token请参考七牛的文档)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">componentWillMount () &#123;</span><br><span class="line">  <span class="comment">// 这里是进入页面即获取token，具体获取时机可根据需求自行把握</span></span><br><span class="line">  <span class="built_in">this</span>.getToken()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 获取七牛token</span></span><br><span class="line"><span class="function"><span class="title">getToken</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line"> Taro.request(&#123;</span><br><span class="line">   url: <span class="string">&#x27;xxxx&#x27;</span>, <span class="comment">// 获取七牛云上传文件的token的后台接口(详细请和后台沟通)</span></span><br><span class="line">   method: <span class="string">&#x27;GET&#x27;</span>,</span><br><span class="line">   success: <span class="function">(<span class="params">res</span>) =&gt;</span> &#123;</span><br><span class="line">     <span class="built_in">this</span>.setState(&#123;</span><br><span class="line">       token: res.data.data.accessKey <span class="comment">// 获取从后台传回的token</span></span><br><span class="line">     &#125;)</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>选择并上传图片</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">handlePlusClick () &#123;</span><br><span class="line"> <span class="built_in">this</span>.chooseImage()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 选择图片</span></span><br><span class="line">chooseImage () &#123;</span><br><span class="line"> <span class="keyword">const</span> &#123; imageFiles, maxLength &#125; = <span class="built_in">this</span>.props</span><br><span class="line"> <span class="keyword">const</span> limit = maxLength - imageFiles.length</span><br><span class="line"> Taro.chooseImage(&#123;</span><br><span class="line">   count: limit,</span><br><span class="line">   success: <span class="function">(<span class="params">res</span>) =&gt;</span> &#123;</span><br><span class="line">     <span class="built_in">this</span>.uploadImage(res.tempFilePaths)</span><br><span class="line">   &#125;,</span><br><span class="line">   complete: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 上传图片</span></span><br><span class="line"><span class="comment">// 这里涉及到多图一起上传的处理</span></span><br><span class="line">uploadImage (tempFilePaths) &#123;</span><br><span class="line">   <span class="keyword">const</span> &#123; uploadCurrent, uploadUrl, token &#125; = <span class="built_in">this</span>.state</span><br><span class="line">   <span class="keyword">const</span> &#123; onChange, imageFiles &#125; = <span class="built_in">this</span>.props</span><br><span class="line">   Taro.uploadFile(&#123;</span><br><span class="line">      url: uploadUrl,</span><br><span class="line">      filePath: tempFilePaths[uploadCurrent],</span><br><span class="line">      name: <span class="string">&#x27;file&#x27;</span>,</span><br><span class="line">      formData: &#123; <span class="string">&#x27;token&#x27;</span>: token &#125;,</span><br><span class="line">      success: <span class="function">(<span class="params">res</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="function"><span class="title">if</span>(<span class="params">res.errMsg === <span class="string">&quot;uploadFile:ok&quot;</span></span>)</span> &#123;</span><br><span class="line">          <span class="keyword">const</span> data = <span class="built_in">JSON</span>.parse(res.data)</span><br><span class="line">          <span class="comment">// 在七牛云后台设定的域名拼接上key即上传至七牛的图片地址</span></span><br><span class="line">          <span class="comment">// 具体见七牛官方文档</span></span><br><span class="line">          <span class="keyword">const</span> imageUrl = <span class="string">&#x27;https://xxxxx/&#x27;</span> + data.key</span><br><span class="line">          <span class="built_in">this</span>.picUrls.push(imageUrl)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="built_in">console</span>.error(<span class="string">&#x27;图片上传失败&#x27;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      fail: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="built_in">console</span>.error(<span class="string">&#x27;图片上传失败&#x27;</span>)</span><br><span class="line">      &#125;,</span><br><span class="line">      complete: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="function"><span class="title">if</span>(<span class="params">uploadCurrent === tempFilePaths.length - <span class="number">1</span></span>)</span> &#123; <span class="comment">// 图片全部上传完成</span></span><br><span class="line">          <span class="keyword">const</span> totalFiles = imageFiles.concat(<span class="built_in">this</span>.picUrls)</span><br><span class="line">          onChange(totalFiles)</span><br><span class="line">          <span class="built_in">this</span>.picUrls = []</span><br><span class="line">          <span class="built_in">this</span>.setState(&#123;</span><br><span class="line">            uploadCurrent: <span class="number">0</span></span><br><span class="line">          &#125;)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// 图片没有全部上传完成</span></span><br><span class="line">          <span class="built_in">this</span>.setState(&#123;</span><br><span class="line">            uploadCurrent: uploadCurrent + <span class="number">1</span></span><br><span class="line">          &#125;, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.uploadImage(tempFilePaths)</span><br><span class="line">          &#125;)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="组件JSX结构"><a href="#组件JSX结构" class="headerlink" title="组件JSX结构"></a>组件JSX结构</h5><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//...</span></span><br><span class="line">render () &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;View className=<span class="string">&#x27;at-row image-upload&#x27;</span>&gt;</span><br><span class="line">     &#123;files.map(<span class="function">(<span class="params">item, index</span>) =&gt;</span> (</span><br><span class="line">       &lt;View</span><br><span class="line">        key=&#123;item + index&#125;</span><br><span class="line">        className=<span class="string">&#x27;at-col at-col-3 image-upload__item&#x27;</span></span><br><span class="line">       &gt;</span><br><span class="line">         &lt;Image</span><br><span class="line">           className=<span class="string">&#x27;image-upload__image&#x27;</span></span><br><span class="line">           src=&#123;item&#125;</span><br><span class="line">           onClick=&#123;onImageClick.bind(<span class="built_in">this</span>, item)&#125;</span><br><span class="line">         &gt;&lt;/Image&gt;</span><br><span class="line">         &lt;Image</span><br><span class="line">          onClick=&#123;<span class="built_in">this</span>.handleImageDelete.bind(<span class="built_in">this</span>, index)&#125;</span><br><span class="line">          className=<span class="string">&#x27;image-upload__close&#x27;</span></span><br><span class="line">          src=<span class="string">&#x27;close.png&#x27;</span></span><br><span class="line">         &gt;&lt;/Image&gt;</span><br><span class="line">       &lt;/View&gt;</span><br><span class="line">     ))&#125;</span><br><span class="line">     &#123;files.length &lt; maxLength ? <span class="xml"><span class="tag">&lt;<span class="name">View</span> <span class="attr">className</span>=<span class="string">&#x27;at-col at-col-3&#x27;</span>&gt;</span></span></span><br><span class="line">       &lt;View</span><br><span class="line">        className=&#x27;image-upload__plus&#x27;</span><br><span class="line">        onClick=&#123;this.handlePlusClick.bind(this)&#125;</span><br><span class="line">       &gt;</span><br><span class="line">         &lt;Image</span><br><span class="line">          className=&#x27;image-upload__plus--image&#x27;</span><br><span class="line">          src=&#x27;add_pic.png&#x27;</span><br><span class="line">         &gt;&lt;/Image&gt;</span><br><span class="line"><span class="xml">       <span class="tag">&lt;/<span class="name">View</span>&gt;</span></span></span><br><span class="line"><span class="xml">     <span class="tag">&lt;/<span class="name">View</span>&gt;</span></span> : <span class="string">&#x27;&#x27;</span>&#125;</span><br><span class="line">    &lt;/View&gt;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//...</span></span><br></pre></td></tr></table></figure>
+<h5 id="组件基础样式"><a href="#组件基础样式" class="headerlink" title="组件基础样式"></a>组件基础样式</h5><figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* src/components/ImageUpload/index.scss */</span></span><br><span class="line"><span class="keyword">@import</span> <span class="string">&#x27;~taro-ui/dist/style/components/flex.scss&#x27;</span>;</span><br><span class="line"><span class="selector-class">.image-upload</span>&#123;</span><br><span class="line">  &amp;__item&#123;</span><br><span class="line">    <span class="attribute">position</span>: relative;</span><br><span class="line">  &#125;</span><br><span class="line">  &amp;__image&#123;</span><br><span class="line">    <span class="attribute">width</span>: <span class="number">126px</span>;</span><br><span class="line">    <span class="attribute">height</span>: <span class="number">126px</span>;</span><br><span class="line">    <span class="attribute">border-radius</span>:<span class="number">8px</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  &amp;__close&#123;</span><br><span class="line">    <span class="attribute">position</span>: absolute;</span><br><span class="line">    <span class="attribute">left</span>: <span class="number">88px</span>;</span><br><span class="line">    <span class="attribute">top</span>: -<span class="number">28px</span>;</span><br><span class="line">    <span class="attribute">width</span>: <span class="number">28px</span>;</span><br><span class="line">    <span class="attribute">height</span>: <span class="number">28px</span>;</span><br><span class="line">    <span class="attribute">padding</span>: <span class="number">20px</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  &amp;__plus--image&#123;</span><br><span class="line">    <span class="attribute">width</span>: <span class="number">126px</span>;</span><br><span class="line">    <span class="attribute">height</span>: <span class="number">126px</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="页面内使用组件"><a href="#页面内使用组件" class="headerlink" title="页面内使用组件"></a>页面内使用组件</h5><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//src/pages/index/index.jsx</span></span><br><span class="line"><span class="title">constructor</span> (<span class="params">props</span>) &#123;</span><br><span class="line"> <span class="built_in">super</span>(props)</span><br><span class="line"> <span class="built_in">this</span>.state = &#123;</span><br><span class="line">   imageFiles: []</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 图片改变监听</span></span><br><span class="line">handleChange (files) &#123;</span><br><span class="line"> <span class="built_in">this</span>.setState(&#123;</span><br><span class="line">   imageFiles: files</span><br><span class="line"> &#125;)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 图片点击监听(这里是图片点击之后调起图片预览接口)</span></span><br><span class="line">handleImageClick (currentUrl) &#123;</span><br><span class="line"> Taro.previewImage(&#123;</span><br><span class="line">   current: currentUrl,</span><br><span class="line">   urls: <span class="built_in">this</span>.state.imageFiles</span><br><span class="line"> &#125;)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">   <span class="keyword">const</span> &#123; imageFiles &#125; = <span class="built_in">this</span>.state</span><br><span class="line">   <span class="keyword">return</span> (</span><br><span class="line">    &lt;View className=<span class="string">&#x27;index&#x27;</span>&gt;</span><br><span class="line">      &lt;ImageUpload</span><br><span class="line">        imageFiles=&#123;imageFiles&#125;</span><br><span class="line">        onChange=&#123;<span class="built_in">this</span>.handleChange.bind(<span class="built_in">this</span>)&#125;</span><br><span class="line">        onImageClick=&#123;<span class="built_in">this</span>.handleImageClick.bind(<span class="built_in">this</span>)&#125;</span><br><span class="line">      /&gt;</span><br><span class="line">    &lt;/View&gt;</span><br><span class="line">   )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一直没找到jsx在md上的渲染方式，代码块可能会有一些高亮错误，将就着看吧，以上。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%A7%BB%E5%8A%A8%E7%AB%AF/" rel="tag"><i class="fa fa-tag"></i> 移动端</a>
+              <a href="/tags/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F/" rel="tag"><i class="fa fa-tag"></i> 微信小程序</a>
+              <a href="/tags/%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0/" rel="tag"><i class="fa fa-tag"></i> 图片上传</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/10/23/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E8%BF%9C%E7%A8%8B%E5%9B%BE%E7%89%87%E8%BD%AC%E6%9C%AC%E5%9C%B0%E4%B8%B4%E6%97%B6%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" rel="prev" title="微信小程序远程图片转本地临时图片解决方案">
+                  <i class="fa fa-chevron-left"></i> 微信小程序远程图片转本地临时图片解决方案
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">NearZeno</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">13k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">12 分钟</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
